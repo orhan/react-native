@@ -46,9 +46,6 @@ var TextStylePropTypes = Object.assign(Object.create(ViewStylePropTypes), {
   textAlign: ReactPropTypes.oneOf(
     ['auto' /*default*/, 'left', 'right', 'center', 'justify']
   ),
-  /**
-   * @platform ios
-   */
   textDecorationLine: ReactPropTypes.oneOf(
     ['none' /*default*/, 'underline', 'line-through', 'underline line-through']
   ),
