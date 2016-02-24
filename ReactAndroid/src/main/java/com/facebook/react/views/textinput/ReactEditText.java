@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.InputType;
@@ -69,6 +70,7 @@ public class ReactEditText extends EditText {
   private boolean mContainsImages;
   private @Nullable SelectionWatcher mSelectionWatcher;
   private final InternalKeyListener mKeyListener;
+  private Typeface mTypeface;
 
   private static final KeyListener sKeyListener = QwertyKeyListener.getInstanceForFullKeyboard();
 
@@ -195,6 +197,8 @@ public class ReactEditText extends EditText {
 
   @Override
   public void setInputType(int type) {
+    mTypeface = getTypeface();
+
     super.setInputType(type);
     mStagedInputType = type;
 
@@ -203,6 +207,8 @@ public class ReactEditText extends EditText {
     // accept all input from it
     mKeyListener.setInputType(type);
     setKeyListener(mKeyListener);
+
+    setTypeface(mTypeface);
   }
 
   // VisibleForTesting from {@link TextInputEventsTestCase}.
