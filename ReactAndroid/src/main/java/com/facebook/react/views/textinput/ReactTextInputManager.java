@@ -25,10 +25,13 @@ import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.text.DefaultStyleValuesUtil;
+import com.facebook.react.views.text.ReactFontManager;
 import com.facebook.react.views.text.ReactTextUpdate;
 import com.facebook.react.views.text.TextInlineImageSpan;
 
+import android.content.res.AssetManager;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -65,6 +68,8 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
   private static final String KEYBOARD_TYPE_PHONE_PAD = "phone-pad";
   private static final InputFilter[] EMPTY_FILTERS = new InputFilter[0];
 
+  private AssetManager mAssetManager;
+
   @Override
   public String getName() {
     return REACT_CLASS;
@@ -72,6 +77,8 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
 
   @Override
   public ReactEditText createViewInstance(ThemedReactContext context) {
+    mAssetManager = context.getAssets();
+
     ReactEditText editText = new ReactEditText(context);
     int inputType = editText.getInputType();
     editText.setInputType(inputType & (~InputType.TYPE_TEXT_FLAG_MULTI_LINE));
@@ -163,6 +170,12 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       }
       view.maybeSetText(update);
     }
+  }
+
+  @ReactProp(name = ViewProps.FONT_FAMILY)
+  public void setFontFamily(ReactEditText view, @Nullable String fontFamily) {
+    Typeface typeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, mAssetManager);
+    view.setTypeface(typeface);
   }
 
   @ReactProp(name = ViewProps.COLOR, defaultInt = 0)
