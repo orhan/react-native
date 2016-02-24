@@ -180,7 +180,7 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
 
   @ReactProp(name = ViewProps.COLOR, defaultInt = 0)
   public void setColor(ReactEditText view, @Nullable Integer color) {
-//    view.setTextColor(color);
+    view.setTextColor(color);
   }
 
   @ReactProp(name = ViewProps.FONT_SIZE, defaultFloat = ViewDefaults.FONT_SIZE_SP)
@@ -201,7 +201,7 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
 
   @ReactProp(name = "placeholder")
   public void setPlaceholder(ReactEditText view, @Nullable String placeholder) {
-    view.setHint("TEST");
+    view.setHint(placeholder);
   }
 
   @ReactProp(name = "placeholderTextColor", customType = "Color")
