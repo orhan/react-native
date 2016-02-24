@@ -80,23 +80,6 @@ public class ReactTextViewManager extends BaseViewManager<ReactTextView, ReactTe
     }
   }
 
-  // These values should match the values in ReactNativeStyleAttributes.js, where they're converted
-  // from JS values into the integer used in setTextDecorationLine.
-  private static final int UNDERLINE = 1 << 0;
-  private static final int LINE_THROUGH = 1 << 1;
-
-  @ReactProp(name = ViewProps.TEXT_DECORATION_LINE, customType = "TextDecorationLine")
-  public void setTextDecorationLine(ReactTextView view, int textDecorationLine) {
-    int paintFlags = view.getPaintFlags();
-    if ((textDecorationLine & UNDERLINE) == UNDERLINE) {
-      paintFlags |= Paint.UNDERLINE_TEXT_FLAG;
-    }
-    if ((textDecorationLine & LINE_THROUGH) == LINE_THROUGH) {
-      paintFlags |= Paint.STRIKE_THRU_TEXT_FLAG;
-    }
-    view.setPaintFlags(paintFlags);
-  }
-
   @Override
   public void updateExtraData(ReactTextView view, Object extraData) {
     ReactTextUpdate update = (ReactTextUpdate) extraData;
