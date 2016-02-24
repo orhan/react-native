@@ -11,6 +11,7 @@ package com.facebook.react.views.text;
 
 import javax.annotation.Nullable;
 
+import android.graphics.Paint;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.view.Gravity;
