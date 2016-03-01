@@ -70,28 +70,39 @@ type Layout = {
   height: Animated.Value;
 };
 
-type OverlayRenderer = (
-  position: Animated.Value,
-  layout: Layout
-) => ReactElement;
+type Position = Animated.Value;
 
-type SceneRenderer = (
-  state: NavigationState,
+/**
+ * Definition of the props object that is passed to the functions
+ * that render the overlay and the scene.
+ */
+type NavigationStateRendererProps = {
+  // The state of the child view.
+  navigationState: NavigationState,
+  // The index of the child view.
   index: number,
-  position: Animated.Value,
-  layout: Layout
+  // The "progressive index" of the containing navigation state.
+  position: Position,
+  // The layout of the the containing navigation view.
+  layout: Layout,
+  // The state of the the containing navigation view.
+  navigationParentState: NavigationParentState,
+};
+
+type NavigationStateRenderer = (
+  props: NavigationStateRendererProps,
 ) => ReactElement;
 
 type TimingSetter = (
   position: Animated.Value,
   newState: NavigationParentState,
-  lastState: NavigationParentState
+  lastState: NavigationParentState,
 ) => void;
 
 type Props = {
   navigationState: NavigationParentState;
-  renderScene: SceneRenderer;
-  renderOverlay: ?OverlayRenderer;
+  renderScene: NavigationStateRenderer;
+  renderOverlay: ?NavigationStateRenderer;
   style: any;
   setTiming: ?TimingSetter;
 };
@@ -104,8 +115,11 @@ class NavigationAnimatedView extends React.Component {
   props: Props;
   constructor(props) {
     super(props);
-    this._animatedHeight = new Animated.Value(0);
-    this._animatedWidth = new Animated.Value(0);
+    this._lastWidth = 0;
+    this._lastHeight = 0;
+    this._animatedHeight = new Animated.Value(this._lastHeight);
+    this._animatedWidth = new Animated.Value(this._lastWidth);
+
     this.state = {
       position: new Animated.Value(this.props.navigationState.index),
       scenes: new Map(),
@@ -192,7 +206,7 @@ class NavigationAnimatedView extends React.Component {
         }}
         style={this.props.style}>
         {this.state.scenes.map(this._renderScene, this)}
-        {this._renderOverlay(this._renderOverlay, this)}
+        {this._renderOverlay()}
       </View>
     );
   }
@@ -205,20 +219,25 @@ class NavigationAnimatedView extends React.Component {
     };
   }
   _renderScene(scene: NavigationScene) {
-    return this.props.renderScene(
-      scene.state,
-      scene.index,
-      this.state.position,
-      this._getLayout()
-    );
+    return this.props.renderScene({
+      index: scene.index,
+      layout: this._getLayout(),
+      navigationParentState: this.props.navigationState,
+      navigationState: scene.state,
+      position: this.state.position,
+    });
   }
   _renderOverlay() {
     const {renderOverlay} = this.props;
     if (renderOverlay) {
-      return renderOverlay(
-        this.state.position,
-        this._getLayout()
-      );
+      const parentState = this.props.navigationState;
+      return renderOverlay({
+        index: parentState.index,
+        layout: this._getLayout(),
+        navigationParentState: parentState,
+        navigationState: parentState.children[parentState.index],
+        position: this.state.position,
+      });
     }
     return null;
   }
