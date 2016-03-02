@@ -18,9 +18,6 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
-import com.facebook.react.uimanager.annotations.ReactProp;
-import com.facebook.react.views.scroll.ReactHorizontalScrollView;
-import com.facebook.react.views.textinput.ReactEditText;
 
 import javax.annotation.Nullable;
 
@@ -52,26 +49,26 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
   @Override
   public Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-      PageScrollEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScroll"),
-      PageScrollStateChangedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScrollStateChanged"),
-      PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected")
+        PageScrollEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScroll"),
+        PageScrollStateChangedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScrollStateChanged"),
+        PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected")
     );
   }
 
   @Override
   public Map<String,Integer> getCommandsMap() {
     return MapBuilder.of(
-      "setPage",
-      COMMAND_SET_PAGE,
-      "setPageWithoutAnimation",
-      COMMAND_SET_PAGE_WITHOUT_ANIMATION);
+        "setPage",
+        COMMAND_SET_PAGE,
+        "setPageWithoutAnimation",
+        COMMAND_SET_PAGE_WITHOUT_ANIMATION);
   }
 
   @Override
   public void receiveCommand(
-    ReactViewPager viewPager,
-    int commandType,
-    @Nullable ReadableArray args) {
+      ReactViewPager viewPager,
+      int commandType,
+      @Nullable ReadableArray args) {
     Assertions.assertNotNull(viewPager);
     Assertions.assertNotNull(args);
     switch (commandType) {
@@ -85,9 +82,9 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
       }
       default:
         throw new IllegalArgumentException(String.format(
-          "Unsupported command %d received by %s.",
-          commandType,
-          getClass().getSimpleName()));
+            "Unsupported command %d received by %s.",
+            commandType,
+            getClass().getSimpleName()));
     }
   }
 
@@ -109,10 +106,5 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
   @Override
   public void removeViewAt(ReactViewPager parent, int index) {
     parent.removeViewFromAdapter(index);
-  }
-
-  @ReactProp(name = "scrollEnabled", defaultBoolean = true)
-  public void setScrollEnabled(ReactViewPager parent, boolean value) {
-    parent.setScrollEnabled(value);
   }
 }
