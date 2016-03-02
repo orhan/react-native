@@ -113,6 +113,11 @@ var ViewPagerAndroid = React.createClass({
       'none', // default
       'on-drag',
     ]),
+
+    /**
+     * Determines whether the ViewPager is enabled for scrolling/swiping.
+     */
+    scrollEnabled: ReactPropTypes.bool,
   },
 
   componentDidMount: function() {
@@ -209,6 +214,7 @@ var ViewPagerAndroid = React.createClass({
         onPageScroll={this._onPageScroll}
         onPageScrollStateChanged={this._onPageScrollStateChanged}
         onPageSelected={this._onPageSelected}
+        scrollEnabled={this.props.scrollEnabled}
         children={this._childrenWithOverridenStyle()}
       />
     );
