@@ -125,6 +125,7 @@ import com.facebook.react.uimanager.events.NativeGestureUtil;
 
   private final EventDispatcher mEventDispatcher;
   private boolean mIsCurrentItemFromJs;
+  private boolean mScrollEnabled = true;
 
   public ReactViewPager(ReactContext reactContext) {
     super(reactContext);
@@ -141,6 +142,10 @@ import com.facebook.react.uimanager.events.NativeGestureUtil;
 
   @Override
   public boolean onInterceptTouchEvent(MotionEvent ev) {
+    if (!mScrollEnabled) {
+      return false;
+    }
+
     if (super.onInterceptTouchEvent(ev)) {
       NativeGestureUtil.notifyNativeGestureStarted(this, ev);
       return true;
@@ -152,6 +157,10 @@ import com.facebook.react.uimanager.events.NativeGestureUtil;
     mIsCurrentItemFromJs = true;
     setCurrentItem(item, animated);
     mIsCurrentItemFromJs = false;
+  }
+
+  public void setScrollEnabled(boolean scrollEnabled) {
+    mScrollEnabled = scrollEnabled;
   }
 
   /*package*/ void addViewToAdapter(View child, int index) {

@@ -107,4 +107,9 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
   public void removeViewAt(ReactViewPager parent, int index) {
     parent.removeViewFromAdapter(index);
   }
+
+  @ReactProp(name = "scrollEnabled", defaultBoolean = true)
+  public void setScrollEnabled(ReactViewPager parent, boolean value) {
+    parent.setScrollEnabled(value);
+  }
 }
