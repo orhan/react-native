@@ -23,7 +23,7 @@ var StyleSheetPropType = require('StyleSheetPropType');
 var View = require('View');
 
 var flattenStyle = require('flattenStyle');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var merge = require('merge');
 var requireNativeComponent = require('requireNativeComponent');
 var resolveAssetSource = require('resolveAssetSource');
@@ -159,6 +159,10 @@ var Image = React.createClass({
 
     if (source && source.uri === '') {
       console.warn('source.uri should not be an empty string');
+    }
+
+    if (this.props.src) {
+      console.warn('The <Image> component requires a `source` property rather than `src`.');
     }
 
     if (source && source.uri) {

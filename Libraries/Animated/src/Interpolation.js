@@ -12,7 +12,7 @@
 /* eslint no-bitwise: 0 */
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var normalizeColor = require('normalizeColor');
 
 type ExtrapolateType = 'extend' | 'identity' | 'clamp';
