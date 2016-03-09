@@ -9,15 +9,16 @@
 
 package com.facebook.react.views.viewpager;
 
-import java.util.Map;
-
-import android.view.View;
-
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
+import com.facebook.react.uimanager.annotations.ReactProp;
+
+import android.view.View;
+
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
