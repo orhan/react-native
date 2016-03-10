@@ -47,6 +47,8 @@ var PickerAndroid = React.createClass({
     enabled: ReactPropTypes.bool,
     mode: ReactPropTypes.oneOf(['dialog', 'dropdown']),
     onValueChange: ReactPropTypes.func,
+    onFocus: ReactPropTypes.func,
+    onDismissed: ReactPropTypes.func,
     prompt: ReactPropTypes.string,
     testID: ReactPropTypes.string,
   },
@@ -61,7 +63,7 @@ var PickerAndroid = React.createClass({
 
   // Translate prop and children into stuff that the native picker understands.
   _stateFromProps: function(props) {
-    var selectedIndex = 0;
+    var selectedIndex = -1;
     let items = ReactChildren.map(props.children, (child, index) => {
       if (child.props.value === props.selectedValue) {
         selectedIndex = index;
@@ -85,6 +87,7 @@ var PickerAndroid = React.createClass({
       enabled: this.props.enabled,
       items: this.state.items,
       mode: this.props.mode,
+      onChange: this._onFocusChange,
       onSelect: this._onChange,
       prompt: this.props.prompt,
       selected: this.state.selectedIndex,
@@ -93,6 +96,14 @@ var PickerAndroid = React.createClass({
     };
 
     return <Picker ref={REF_PICKER} {...nativeProps} />;
+  },
+
+  _onFocusChange: function(event: Event) {
+    if (this.props.onFocus && event.nativeEvent.isFocused) {
+      this.props.onFocus();
+    } else if (this.props.onDismissed && !event.nativeEvent.isFocused) {
+      this.props.onDismissed();
+    }
   },
 
   _onChange: function(event: Event) {
@@ -112,7 +123,7 @@ var PickerAndroid = React.createClass({
     // disallow/undo/mutate the selection of certain values. In other
     // words, the embedder of this component should be the source of
     // truth, not the native component.
-    if (this.refs[REF_PICKER] && this.state.selectedIndex !== event.nativeEvent.position) {
+    if (this.refs[REF_PICKER] && this.state.selectedIndex != -1 && this.state.selectedIndex !== event.nativeEvent.position) {
       this.refs[REF_PICKER].setNativeProps({selected: this.state.selectedIndex});
     }
   },

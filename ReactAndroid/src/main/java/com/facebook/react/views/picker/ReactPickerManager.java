@@ -9,16 +9,6 @@
 
 package com.facebook.react.views.picker;
 
-import javax.annotation.Nullable;
-
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
-
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -29,7 +19,19 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.facebook.react.views.picker.events.PickerFocusEvent;
 import com.facebook.react.views.picker.events.PickerItemSelectEvent;
+
+import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import javax.annotation.Nullable;
 
 /**
  * {@link ViewManager} for the {@link ReactPicker} view. This is abstract because the
@@ -41,7 +43,7 @@ import com.facebook.react.views.picker.events.PickerItemSelectEvent;
 public abstract class ReactPickerManager extends SimpleViewManager<ReactPicker> {
 
   @ReactProp(name = "items")
-  public void setItems(ReactPicker view, @Nullable ReadableArray items) {
+  public void setItems(final ReactPicker view, @Nullable ReadableArray items) {
     if (items != null) {
       ReadableMap[] data = new ReadableMap[items.size()];
       for (int i = 0; i < items.size(); i++) {
@@ -93,6 +95,12 @@ public abstract class ReactPickerManager extends SimpleViewManager<ReactPicker> 
             new PickerEventEmitter(
                     picker,
                     reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher()));
+
+    picker.setOnFocusListener(
+      new PickerFocusEventEmitter(
+        picker,
+        reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher())
+    );
   }
 
   private static class ReactPickerAdapter extends ArrayAdapter<ReadableMap> {
@@ -158,6 +166,23 @@ public abstract class ReactPickerManager extends SimpleViewManager<ReactPicker> 
     public void onItemSelected(int position) {
       mEventDispatcher.dispatchEvent( new PickerItemSelectEvent(
               mReactPicker.getId(), SystemClock.nanoTime(), position));
+    }
+  }
+
+  private static class PickerFocusEventEmitter implements ReactPicker.OnFocusListener {
+
+    private final ReactPicker mReactPicker;
+    private final EventDispatcher mEventDispatcher;
+
+    public PickerFocusEventEmitter(ReactPicker reactPicker, EventDispatcher eventDispatcher) {
+      mReactPicker = reactPicker;
+      mEventDispatcher = eventDispatcher;
+    }
+
+    @Override
+    public void onFocusChanged(boolean isFocused) {
+      mEventDispatcher.dispatchEvent( new PickerFocusEvent(
+        mReactPicker.getId(), SystemClock.nanoTime(), isFocused));
     }
   }
 }

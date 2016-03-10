@@ -9,7 +9,7 @@
 
 package com.facebook.react.views.picker;
 
-import javax.annotation.Nullable;
+import com.facebook.react.common.annotations.VisibleForTesting;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -17,7 +17,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
 
-import com.facebook.react.common.annotations.VisibleForTesting;
+import javax.annotation.Nullable;
 
 public class ReactPicker extends Spinner {
 
@@ -25,13 +25,19 @@ public class ReactPicker extends Spinner {
   private @Nullable Integer mPrimaryColor;
   private boolean mSuppressNextEvent;
   private @Nullable OnSelectListener mOnSelectListener;
+  private @Nullable OnFocusListener mOnFocusListener;
   private @Nullable Integer mStagedSelection;
+  private @Nullable boolean mHasFocus = false;
 
   /**
    * Listener interface for ReactPicker events.
    */
   public interface OnSelectListener {
     void onItemSelected(int position);
+  }
+
+  public interface OnFocusListener {
+    void onFocusChanged(boolean isFocused);
   }
 
   public ReactPicker(Context context) {
@@ -82,8 +88,8 @@ public class ReactPicker extends Spinner {
       setOnItemSelectedListener(
           new OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-              if (!mSuppressNextEvent && mOnSelectListener != null) {
+            public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
+              if (!mSuppressNextEvent && mOnSelectListener != null && mHasFocus) {
                 mOnSelectListener.onItemSelected(position);
               }
               mSuppressNextEvent = false;
@@ -91,7 +97,7 @@ public class ReactPicker extends Spinner {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-              if (!mSuppressNextEvent && mOnSelectListener != null) {
+              if (!mSuppressNextEvent && mOnSelectListener != null && mHasFocus) {
                 mOnSelectListener.onItemSelected(-1);
               }
               mSuppressNextEvent = false;
@@ -105,6 +111,34 @@ public class ReactPicker extends Spinner {
     return mOnSelectListener;
   }
 
+  public void setOnFocusListener(@Nullable final OnFocusListener onFocusListener) {
+    mOnFocusListener = onFocusListener;
+
+    if (onFocusListener != null) {
+      setFocusableInTouchMode(true);
+    } else {
+      setFocusableInTouchMode(false);
+    }
+
+    setOnFocusChangeListener(new OnFocusChangeListener() {
+      @Override
+      public void onFocusChange(View v, boolean hasFocus) {
+        if (onFocusListener != null) {
+          if (hasFocus) {
+            performClick();
+          }
+
+          mHasFocus = hasFocus;
+          onFocusListener.onFocusChanged(hasFocus);
+        }
+      }
+    });
+  }
+
+  @Nullable public OnFocusListener getOnFocusListener() {
+    return mOnFocusListener;
+  }
+
   /**
    * Will cache "selection" value locally and set it only once {@link #updateStagedSelection} is
    * called
@@ -114,9 +148,9 @@ public class ReactPicker extends Spinner {
   }
 
   public void updateStagedSelection() {
-    if (mStagedSelection != null) {
+    if (mStagedSelection != null && mStagedSelection != -1) {
       setSelectionWithSuppressEvent(mStagedSelection);
-      mStagedSelection = null;
+      mStagedSelection = -1;
     }
   }
 

@@ -77,6 +77,14 @@ var Picker = React.createClass({
      */
     onValueChange: React.PropTypes.func,
     /**
+     * On Android, Callback when the Picker is focused, i.e. the options are shown.
+     */
+    onFocus: React.PropTypes.func,
+    /**
+     * On Android, Callback when an the Picker loses focus, i.e. the dialog or dropdown gets dismissed.
+     */
+    onDismissed: React.PropTypes.func,
+    /**
      * If set to false, the picker will be disabled, i.e. the user will not be able to make a
      * selection.
      * @platform android
