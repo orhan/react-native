@@ -1,5 +1,10 @@
 /**
- * Copyright (c) 2015, Facebook, Inc.  All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * Facebook, Inc. ("Facebook") owns all right, title and interest, including
  * all intellectual property and other proprietary rights, in and to the React
@@ -30,8 +35,9 @@
 const Animated = require('Animated');
 const NavigationAnimatedView = require('NavigationAnimatedView');
 const NavigationCard = require('NavigationCard');
+const NavigationCardStackStyleInterpolator = require('NavigationCardStackStyleInterpolator');
 const NavigationContainer = require('NavigationContainer');
-const NavigationLinearPanResponder = require('NavigationLinearPanResponder');
+const NavigationCardStackPanResponder = require('NavigationCardStackPanResponder');
 const NavigationPropTypes = require('NavigationPropTypes');
 const React = require('React');
 const ReactComponentWithPureRenderMixin = require('ReactComponentWithPureRenderMixin');
@@ -40,11 +46,10 @@ const StyleSheet = require('StyleSheet');
 const emptyFunction = require('fbjs/lib/emptyFunction');
 
 const {PropTypes} = React;
-const {Directions} = NavigationLinearPanResponder;
+const {Directions} = NavigationCardStackPanResponder;
 
 import type {
   NavigationAnimatedValue,
-  NavigationAnimationSetter,
   NavigationParentState,
   NavigationSceneRenderer,
   NavigationSceneRendererProps,
@@ -52,7 +57,7 @@ import type {
 
 import type {
   NavigationGestureDirection,
-} from 'NavigationLinearPanResponder';
+} from 'NavigationCardStackPanResponder';
 
 type Props = {
   direction: NavigationGestureDirection,
@@ -74,10 +79,20 @@ const defaultProps = {
 };
 
 /**
- * A controlled navigation view that renders a list of cards.
+ * A controlled navigation view that renders a stack of cards.
+ *
+ *     +------------+
+ *   +-+            |
+ * +-+ |            |
+ * | | |            |
+ * | | |  Focused   |
+ * | | |   Card     |
+ * | | |            |
+ * +-+ |            |
+ *   +-+            |
+ *     +------------+
  */
 class NavigationCardStack extends React.Component {
-  _applyAnimation: NavigationAnimationSetter;
   _renderScene : NavigationSceneRenderer;
 
   constructor(props: Props, context: any) {
@@ -85,7 +100,6 @@ class NavigationCardStack extends React.Component {
   }
 
   componentWillMount(): void {
-    this._applyAnimation = this._applyAnimation.bind(this);
     this._renderScene = this._renderScene.bind(this);
   }
 
@@ -103,34 +117,31 @@ class NavigationCardStack extends React.Component {
         navigationState={this.props.navigationState}
         renderOverlay={this.props.renderOverlay}
         renderScene={this._renderScene}
-        applyAnimation={this._applyAnimation}
         style={[styles.animatedView, this.props.style]}
       />
     );
   }
 
   _renderScene(props: NavigationSceneRendererProps): ReactElement {
+    const isVertical = this.props.direction === 'vertical';
+
+    const style = isVertical ?
+      NavigationCardStackStyleInterpolator.forVertical(props) :
+      NavigationCardStackStyleInterpolator.forHorizontal(props);
+
+    const panHandlers = isVertical ?
+      NavigationCardStackPanResponder.forVertical(props) :
+      NavigationCardStackPanResponder.forHorizontal(props);
+
     return (
       <NavigationCard
         {...props}
-        direction={this.props.direction}
-        key={'card_' + props.scene.navigationState.key}
+        key={'card_' + props.scene.key}
+        panHandlers={panHandlers}
         renderScene={this.props.renderScene}
+        style={style}
       />
     );
-  }
-
-  _applyAnimation(
-    position: NavigationAnimatedValue,
-    navigationState: NavigationParentState,
-  ): void {
-    Animated.timing(
-      position,
-      {
-        duration: 500,
-        toValue: navigationState.index,
-      }
-    ).start();
   }
 }
 
