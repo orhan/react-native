@@ -116,6 +116,7 @@ public class ReactPicker extends Spinner {
 
     if (onFocusListener != null) {
       setFocusableInTouchMode(true);
+      clearFocus();
     } else {
       setFocusableInTouchMode(false);
     }
@@ -126,6 +127,7 @@ public class ReactPicker extends Spinner {
         if (onFocusListener != null) {
           if (hasFocus) {
             performClick();
+            clearFocus();
           }
 
           mHasFocus = hasFocus;
