@@ -25,19 +25,13 @@ public class ReactPicker extends Spinner {
   private @Nullable Integer mPrimaryColor;
   private boolean mSuppressNextEvent;
   private @Nullable OnSelectListener mOnSelectListener;
-  private @Nullable OnFocusListener mOnFocusListener;
   private @Nullable Integer mStagedSelection;
-  private @Nullable boolean mHasFocus = false;
 
   /**
    * Listener interface for ReactPicker events.
    */
   public interface OnSelectListener {
     void onItemSelected(int position);
-  }
-
-  public interface OnFocusListener {
-    void onFocusChanged(boolean isFocused);
   }
 
   public ReactPicker(Context context) {
@@ -66,8 +60,8 @@ public class ReactPicker extends Spinner {
     @Override
     public void run() {
       measure(
-          MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
-          MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
+        MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
       layout(getLeft(), getTop(), getRight(), getBottom());
     }
   };
@@ -86,59 +80,29 @@ public class ReactPicker extends Spinner {
   public void setOnSelectListener(@Nullable OnSelectListener onSelectListener) {
     if (getOnItemSelectedListener() == null) {
       setOnItemSelectedListener(
-          new OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
-              if (!mSuppressNextEvent && mOnSelectListener != null && mHasFocus) {
-                mOnSelectListener.onItemSelected(position);
-              }
-              mSuppressNextEvent = false;
+        new OnItemSelectedListener() {
+          @Override
+          public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            if (!mSuppressNextEvent && mOnSelectListener != null) {
+              mOnSelectListener.onItemSelected(position);
             }
+            mSuppressNextEvent = false;
+          }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-              if (!mSuppressNextEvent && mOnSelectListener != null && mHasFocus) {
-                mOnSelectListener.onItemSelected(-1);
-              }
-              mSuppressNextEvent = false;
+          @Override
+          public void onNothingSelected(AdapterView<?> parent) {
+            if (!mSuppressNextEvent && mOnSelectListener != null) {
+              mOnSelectListener.onItemSelected(-1);
             }
-          });
+            mSuppressNextEvent = false;
+          }
+        });
     }
     mOnSelectListener = onSelectListener;
   }
 
   @Nullable public OnSelectListener getOnSelectListener() {
     return mOnSelectListener;
-  }
-
-  public void setOnFocusListener(@Nullable final OnFocusListener onFocusListener) {
-    mOnFocusListener = onFocusListener;
-
-    if (onFocusListener != null) {
-      setFocusableInTouchMode(true);
-      clearFocus();
-    } else {
-      setFocusableInTouchMode(false);
-      clearFocus();
-    }
-
-    setOnFocusChangeListener(new OnFocusChangeListener() {
-      @Override
-      public void onFocusChange(View v, boolean hasFocus) {
-        if (onFocusListener != null) {
-          if (hasFocus) {
-            performClick();
-          }
-
-          mHasFocus = hasFocus;
-          onFocusListener.onFocusChanged(hasFocus);
-        }
-      }
-    });
-  }
-
-  @Nullable public OnFocusListener getOnFocusListener() {
-    return mOnFocusListener;
   }
 
   /**
@@ -150,9 +114,9 @@ public class ReactPicker extends Spinner {
   }
 
   public void updateStagedSelection() {
-    if (mStagedSelection != null && mStagedSelection != -1) {
+    if (mStagedSelection != null) {
       setSelectionWithSuppressEvent(mStagedSelection);
-      mStagedSelection = -1;
+      mStagedSelection = null;
     }
   }
 

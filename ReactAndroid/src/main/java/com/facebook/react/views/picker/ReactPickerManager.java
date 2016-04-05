@@ -95,12 +95,6 @@ public abstract class ReactPickerManager extends SimpleViewManager<ReactPicker> 
             new PickerEventEmitter(
                     picker,
                     reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher()));
-
-    picker.setOnFocusListener(
-      new PickerFocusEventEmitter(
-        picker,
-        reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher())
-    );
   }
 
   private static class ReactPickerAdapter extends ArrayAdapter<ReadableMap> {
@@ -166,23 +160,6 @@ public abstract class ReactPickerManager extends SimpleViewManager<ReactPicker> 
     public void onItemSelected(int position) {
       mEventDispatcher.dispatchEvent( new PickerItemSelectEvent(
               mReactPicker.getId(), SystemClock.nanoTime(), position));
-    }
-  }
-
-  private static class PickerFocusEventEmitter implements ReactPicker.OnFocusListener {
-
-    private final ReactPicker mReactPicker;
-    private final EventDispatcher mEventDispatcher;
-
-    public PickerFocusEventEmitter(ReactPicker reactPicker, EventDispatcher eventDispatcher) {
-      mReactPicker = reactPicker;
-      mEventDispatcher = eventDispatcher;
-    }
-
-    @Override
-    public void onFocusChanged(boolean isFocused) {
-      mEventDispatcher.dispatchEvent( new PickerFocusEvent(
-        mReactPicker.getId(), SystemClock.nanoTime(), isFocused));
     }
   }
 }
