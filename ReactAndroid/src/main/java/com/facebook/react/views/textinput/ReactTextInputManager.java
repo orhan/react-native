@@ -178,9 +178,13 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     view.setTypeface(typeface);
   }
 
-  @ReactProp(name = ViewProps.COLOR, defaultInt = 0)
+  @ReactProp(name = ViewProps.COLOR, customType = "Color")
   public void setColor(ReactEditText view, @Nullable Integer color) {
-    view.setTextColor(color);
+    if (color == null) {
+      view.setTextColor(DefaultStyleValuesUtil.getDefaultTextColor(view.getContext()));
+    } else {
+      view.setTextColor(color);
+    }
   }
 
   @ReactProp(name = ViewProps.FONT_SIZE, defaultFloat = ViewDefaults.FONT_SIZE_SP)
@@ -232,14 +236,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     view.setSelectAllOnFocus(selectTextOnFocus);
   }
 
-  @ReactProp(name = ViewProps.COLOR, customType = "Color")
-  public void setColor(ReactEditText view, @Nullable Integer color) {
-    if (color == null) {
-      view.setTextColor(DefaultStyleValuesUtil.getDefaultTextColor(view.getContext()));
-    } else {
-      view.setTextColor(color);
-    }
-  }
 
   @ReactProp(name = "underlineColorAndroid", customType = "Color")
   public void setUnderlineColor(ReactEditText view, @Nullable Integer underlineColor) {
