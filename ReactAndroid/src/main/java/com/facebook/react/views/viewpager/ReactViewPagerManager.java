@@ -12,6 +12,7 @@ package com.facebook.react.views.viewpager;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
+import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
@@ -112,5 +113,10 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
   @ReactProp(name = "scrollEnabled", defaultBoolean = true)
   public void setScrollEnabled(ReactViewPager parent, boolean value) {
     parent.setScrollEnabled(value);
+  }
+
+  @ReactProp(name = "pageMargin", defaultFloat = 0)
+  public void setPageMargin(ReactViewPager pager, float margin) {
+    pager.setPageMargin((int) PixelUtil.toPixelFromDIP(margin));
   }
 }

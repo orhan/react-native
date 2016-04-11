@@ -32,7 +32,8 @@
  */
 'use strict';
 
-const React = require('react-native');
+const React = require('React');
+const ReactNative = require('react-native');
 const NavigationContainer = require('NavigationContainer');
 const NavigationHeaderTitle = require('NavigationHeaderTitle');
 const NavigationHeaderBackButton = require('NavigationHeaderBackButton');
@@ -45,7 +46,7 @@ const {
   Platform,
   StyleSheet,
   View,
-} = React;
+} = ReactNative;
 
 import type  {
   NavigationSceneRenderer,
@@ -183,7 +184,7 @@ class NavigationHeader extends React.Component<DefaultProps, Props, any> {
       return null;
     }
 
-    const pointerEvents = offset !== 0 || isStale ? 'none' : 'auto';
+    const pointerEvents = offset !== 0 || isStale ? 'none' : 'box-none';
     return (
       <Animated.View
         pointerEvents={pointerEvents}
