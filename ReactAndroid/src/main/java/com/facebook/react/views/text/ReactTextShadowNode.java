@@ -447,11 +447,15 @@ public class ReactTextShadowNode extends LayoutShadowNode {
 
   @ReactProp(name = ViewProps.TEXT_DECORATION_LINE)
   public void setTextDecorationLine(@Nullable String textDecorationLineString) {
-    for(String textDecorationLineSubString:textDecorationLineString.split(" ")) {
-      if ("underline".equals(textDecorationLineSubString)) {
-        mIsUnderlineTextDecorationSet = true;
-      } else if ("line-through".equals(textDecorationLineSubString)) {
-        mIsLineThroughTextDecorationSet = true;
+    mIsUnderlineTextDecorationSet = false;
+    mIsLineThroughTextDecorationSet = false;
+    if (textDecorationLineString != null) {
+      for (String textDecorationLineSubString : textDecorationLineString.split(" ")) {
+        if ("underline".equals(textDecorationLineSubString)) {
+          mIsUnderlineTextDecorationSet = true;
+        } else if ("line-through".equals(textDecorationLineSubString)) {
+          mIsLineThroughTextDecorationSet = true;
+        }
       }
     }
     markUpdated();

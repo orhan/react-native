@@ -52,15 +52,9 @@ var TextStylePropTypes = Object.assign(Object.create(ViewStylePropTypes), {
   textAlignVertical: ReactPropTypes.oneOf(
     ['auto' /*default*/, 'top', 'bottom', 'center']
   ),
-  /**
-   * Specifies the style of text decoration line; an underline, a line-through
-   * (often referred to as a strike-through), or both.  Can be specified as either a
-   * space-separated string of underline and line-through, or an array of the same.
-   */
-  textDecorationLine: ReactPropTypes.oneOfType([
-    ReactPropTypes.oneOf(['none' /*default*/, 'underline', 'line-through', 'underline line-through']),
-    ReactPropTypes.arrayOf(ReactPropTypes.oneOf(['none', 'underline', 'line-through']))
-  ]),
+  textDecorationLine: ReactPropTypes.oneOf(
+    ['none' /*default*/, 'underline', 'line-through', 'underline line-through']
+  ),
   /**
    * @platform ios
    */
