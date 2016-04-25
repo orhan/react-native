@@ -142,15 +142,19 @@ import com.facebook.react.uimanager.events.NativeGestureUtil;
 
   @Override
   public boolean onInterceptTouchEvent(MotionEvent ev) {
-    if (!mScrollEnabled) {
-      return false;
-    }
-
-    if (super.onInterceptTouchEvent(ev)) {
+    if (mScrollEnabled && super.onInterceptTouchEvent(ev)) {
       NativeGestureUtil.notifyNativeGestureStarted(this, ev);
       return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent ev) {
+    if (!mScrollEnabled) {
+      return false;
+    }
+    return super.onTouchEvent(ev);
   }
 
   public void setCurrentItemFromJs(int item, boolean animated) {
