@@ -9,25 +9,6 @@
 
 package com.facebook.react.views.textinput;
 
-import javax.annotation.Nullable;
-
-import java.util.LinkedList;
-import java.util.Map;
-
-import android.graphics.PorterDuff;
-import android.graphics.Typeface;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.InputType;
-import android.text.Spannable;
-import android.text.TextWatcher;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.TextView;
-
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
@@ -44,8 +25,29 @@ import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.text.DefaultStyleValuesUtil;
+import com.facebook.react.views.text.ReactFontManager;
 import com.facebook.react.views.text.ReactTextUpdate;
 import com.facebook.react.views.text.TextInlineImageSpan;
+
+import android.content.res.AssetManager;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.TextWatcher;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
+
+import java.util.LinkedList;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Manages instances of TextInput.
@@ -66,6 +68,8 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
   private static final String KEYBOARD_TYPE_PHONE_PAD = "phone-pad";
   private static final InputFilter[] EMPTY_FILTERS = new InputFilter[0];
   private static final int UNSET = -1;
+
+  private AssetManager mAssetManager;
   
   @Override
   public String getName() {
@@ -74,6 +78,8 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
 
   @Override
   public ReactEditText createViewInstance(ThemedReactContext context) {
+    mAssetManager = context.getAssets();
+
     ReactEditText editText = new ReactEditText(context);
     int inputType = editText.getInputType();
     editText.setInputType(inputType & (~InputType.TYPE_TEXT_FLAG_MULTI_LINE));
@@ -180,7 +186,7 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     if (view.getTypeface() != null) {
       style = view.getTypeface().getStyle();
     }
-    Typeface newTypeface = Typeface.create(fontFamily, style);
+    Typeface newTypeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, mAssetManager);
     view.setTypeface(newTypeface);
   }
 
