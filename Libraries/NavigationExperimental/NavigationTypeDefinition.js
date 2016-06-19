@@ -21,17 +21,14 @@ export type NavigationAnimatedValue = Animated.Value;
 
 export type NavigationGestureDirection = 'horizontal' | 'vertical';
 
+export type NavigationRoute = {
+  key: string,
+};
+
 export type NavigationState = {
-  key: string,
-};
-
-export type NavigationParentState = {
   index: number,
-  key: string,
-  children: Array<NavigationState>,
+  routes: Array<NavigationRoute>,
 };
-
-export type NavigationAction = any;
 
 export type NavigationLayout = {
   height: NavigationAnimatedValue,
@@ -45,20 +42,17 @@ export type NavigationScene = {
   index: number,
   isStale: boolean,
   key: string,
-  navigationState: NavigationState,
+  route: NavigationRoute,
 };
 
-export type NavigationSceneRendererProps = {
-  // The layout of the containing view of the scenes.
+export type NavigationTransitionProps = {
+  // The layout of the transitioner of the scenes.
   layout: NavigationLayout,
 
-  // The navigation state of the containing view.
-  navigationState: NavigationParentState,
+  // The navigation state of the transitioner.
+  navigationState: NavigationState,
 
-  // Callback to navigation with an action.
-  onNavigate: NavigationActionCaller,
-
-  // The progressive index of the containing view's navigation state.
+  // The progressive index of the transitioner's navigation state.
   position: NavigationAnimatedValue,
 
   // The value that represents the progress of the transition when navigation
@@ -68,11 +62,19 @@ export type NavigationSceneRendererProps = {
   //  progress.__getAnimatedValue() == 1 : transtion completes.
   progress: NavigationAnimatedValue,
 
+  // All the scenes of the transitioner.
+  scenes: Array<NavigationScene>,
+};
+
+export type NavigationSceneRendererProps = {
+  layout: NavigationLayout,
+  navigationState: NavigationState,
+  position: NavigationAnimatedValue,
+  progress: NavigationAnimatedValue,
+  scenes: Array<NavigationScene>,
+
   // The scene to render.
   scene: NavigationScene,
-
-  // All the scenes of the containing view's.
-  scenes: Array<NavigationScene>,
 };
 
 export type NavigationPanPanHandlers = {
@@ -98,27 +100,15 @@ export type NavigationTransitionSpec = {
 
 // Functions.
 
-export type NavigationActionCaller = Function;
-
 export type NavigationAnimationSetter = (
   position: NavigationAnimatedValue,
-  newState: NavigationParentState,
-  lastState: NavigationParentState,
+  newState: NavigationState,
+  lastState: NavigationState,
 ) => void;
-
-export type NavigationRenderer = (
-  navigationState: ?NavigationState,
-  onNavigate: NavigationActionCaller,
-) => ReactElement;
-
-export type NavigationReducer = (
-  state: ?NavigationState,
-  action: ?NavigationAction,
-) => NavigationState;
 
 export type NavigationSceneRenderer = (
   props: NavigationSceneRendererProps,
-) => ?ReactElement;
+) => ?ReactElement<any>;
 
 export type NavigationStyleInterpolator = (
   props: NavigationSceneRendererProps,

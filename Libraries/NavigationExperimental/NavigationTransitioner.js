@@ -20,23 +20,20 @@ const StyleSheet = require('StyleSheet');
 const View = require('View');
 
 import type {
-  NavigationActionCaller,
   NavigationAnimatedValue,
   NavigationLayout,
-  NavigationParentState,
   NavigationScene,
-  NavigationSceneRenderer,
+  NavigationState,
   NavigationTransitionConfigurator,
+  NavigationTransitionProps,
 } from 'NavigationTypeDefinition';
 
 type Props = {
   configureTransition: NavigationTransitionConfigurator,
-  navigationState: NavigationParentState,
-  onNavigate: NavigationActionCaller,
+  navigationState: NavigationState,
   onTransitionEnd: () => void,
   onTransitionStart: () => void,
-  renderOverlay: ?NavigationSceneRenderer,
-  renderScene: NavigationSceneRenderer,
+  render: (props: NavigationTransitionProps) => any,
   style: any,
 };
 
@@ -69,11 +66,9 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
   static propTypes = {
     configureTransition: PropTypes.func,
     navigationState: NavigationPropTypes.navigationState.isRequired,
-    onNavigate: PropTypes.func.isRequired,
     onTransitionEnd: PropTypes.func,
     onTransitionStart: PropTypes.func,
-    renderOverlay: PropTypes.func,
-    renderScene: PropTypes.func.isRequired,
+    render: PropTypes.func.isRequired,
   };
 
   constructor(props: Props, context: any) {
@@ -128,7 +123,7 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
       nextProps.configureTransition() :
       null;
 
-    const transtionSpec = {
+    const transitionSpec = {
       ...DefaultTransitionSpec,
       ...transitionUserSpec,
     };
@@ -139,7 +134,7 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
       Animated.timing(
         progress,
         {
-          ...transtionSpec,
+          ...transitionSpec,
           toValue: 1,
         },
       ),
@@ -150,7 +145,7 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
         Animated.timing(
           position,
           {
-            ...transtionSpec,
+            ...transitionSpec,
             toValue: nextProps.navigationState.index,
           },
         ),
@@ -162,74 +157,14 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
     Animated.parallel(animations).start(this._onTransitionEnd);
   }
 
-  render(): ReactElement {
-    const overlay = this._renderOverlay();
-    const scenes = this._renderScenes();
+  render(): ReactElement<any> {
     return (
       <View
         onLayout={this._onLayout}
-        style={this.props.style}>
-        <View style={styles.scenes} key="scenes">
-          {scenes}
-        </View>
-        {overlay}
+        style={[styles.main, this.props.style]}>
+        {this.props.render(this._buildTransitionProps())}
       </View>
     );
-  }
-
-  _renderScenes(): Array<?ReactElement> {
-    return this.state.scenes.map(this._renderScene, this);
-  }
-
-  _renderScene(scene: NavigationScene): ?ReactElement {
-    const {
-      navigationState,
-      onNavigate,
-      renderScene,
-    } = this.props;
-
-    const {
-      position,
-      progress,
-      scenes,
-    } = this.state;
-
-    return renderScene({
-      layout: this.state.layout,
-      navigationState,
-      onNavigate,
-      position,
-      progress,
-      scene,
-      scenes,
-    });
-  }
-
-  _renderOverlay(): ?ReactElement {
-    if (this.props.renderOverlay) {
-      const {
-        navigationState,
-        onNavigate,
-        renderOverlay,
-      } = this.props;
-
-      const {
-        position,
-        progress,
-        scenes,
-      } = this.state;
-
-      return renderOverlay({
-        layout: this.state.layout,
-        navigationState,
-        onNavigate,
-        position,
-        progress,
-        scene: scenes[navigationState.index],
-        scenes,
-      });
-    }
-    return null;
   }
 
   _onLayout(event: any): void {
@@ -255,10 +190,31 @@ class NavigationTransitioner extends React.Component<any, Props, State> {
     }
     this.props.onTransitionEnd && this.props.onTransitionEnd();
   }
+
+  _buildTransitionProps(): NavigationTransitionProps {
+    const {
+      navigationState,
+    } = this.props;
+
+    const {
+      layout,
+      position,
+      progress,
+      scenes,
+    } = this.state;
+
+    return {
+      layout,
+      navigationState,
+      position,
+      progress,
+      scenes,
+    };
+  }
 }
 
 const styles = StyleSheet.create({
-  scenes: {
+  main: {
     flex: 1,
   },
 });

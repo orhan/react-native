@@ -95,13 +95,14 @@ class Resolver {
       providesModuleNodeModules: [
         'react',
         'react-native',
+        'react-native-windows',
         // Parse requires AsyncStorage. They will
         // change that to require('react-native') which
         // should work after this release and we can
         // remove it from here.
         'parse',
       ],
-      platforms: ['ios', 'android'],
+      platforms: ['ios', 'android', 'windows', 'web'],
       preferNativePlatform: true,
       fileWatcher: opts.fileWatcher,
       cache: opts.cache,
@@ -263,10 +264,6 @@ class Resolver {
 
   minifyModule({path, code, map}) {
     return this._minifyCode(path, code, map);
-  }
-
-  getDebugInfo() {
-    return this._depGraph.getDebugInfo();
   }
 }
 
