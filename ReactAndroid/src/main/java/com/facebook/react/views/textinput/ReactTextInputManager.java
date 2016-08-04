@@ -14,7 +14,6 @@ import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
-import com.facebook.react.common.SystemClock;
 import com.facebook.react.uimanager.BaseViewManager;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.PixelUtil;
@@ -24,6 +23,7 @@ import com.facebook.react.uimanager.ViewDefaults;
 import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
 import com.facebook.react.views.text.DefaultStyleValuesUtil;
 import com.facebook.react.views.text.ReactFontManager;
 import com.facebook.react.views.text.ReactTextUpdate;
@@ -250,6 +250,15 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     view.setBlurOnSubmit(blurOnSubmit);
   }
 
+  @ReactProp(name = "onContentSizeChange", defaultBoolean = false)
+  public void setOnContentSizeChange(final ReactEditText view, boolean onContentSizeChange) {
+    if (onContentSizeChange) {
+      view.setContentSizeWatcher(new ReactContentSizeWatcher(view));
+    } else {
+      view.setContentSizeWatcher(null);
+    }
+  }
+
   @ReactProp(name = "placeholder")
   public void setPlaceholder(ReactEditText view, @Nullable String placeholder) {
     view.setHint(placeholder);
@@ -327,6 +336,17 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     } else {
       throw new JSApplicationIllegalArgumentException("Invalid textAlignVertical: " + textAlignVertical);
     }
+  }
+
+  @ReactProp(name = "inlineImageLeft")
+  public void setInlineImageLeft(ReactEditText view, @Nullable String resource) {
+    int id = ResourceDrawableIdHelper.getInstance().getResourceDrawableId(view.getContext(), resource);
+    view.setCompoundDrawablesWithIntrinsicBounds(id, 0, 0, 0);
+  }
+
+  @ReactProp(name = "inlineImagePadding")
+  public void setInlineImagePadding(ReactEditText view, int padding) {
+    view.setCompoundDrawablePadding(padding);
   }
 
   @ReactProp(name = "editable", defaultBoolean = true)
@@ -545,15 +565,17 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       if (count == before && newText.equals(oldText)) {
         return;
       }
+
+      // TODO: remove contentSize from onTextChanged entirely now that onChangeContentSize exists?
       int contentWidth = mEditText.getWidth();
       int contentHeight = mEditText.getHeight();
 
       // Use instead size of text content within EditText when available
       if (mEditText.getLayout() != null) {
         contentWidth = mEditText.getCompoundPaddingLeft() + mEditText.getLayout().getWidth() +
-            mEditText.getCompoundPaddingRight();
+          mEditText.getCompoundPaddingRight();
         contentHeight = mEditText.getCompoundPaddingTop() + mEditText.getLayout().getHeight() +
-            mEditText.getCompoundPaddingTop();
+          mEditText.getCompoundPaddingTop();
       }
 
       // The event that contains the event counter and updates it must be sent first.
@@ -561,7 +583,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       mEventDispatcher.dispatchEvent(
           new ReactTextChangedEvent(
               mEditText.getId(),
-              SystemClock.nanoTime(),
               s.toString(),
               (int) PixelUtil.toDIPFromPixel(contentWidth),
               (int) PixelUtil.toDIPFromPixel(contentHeight),
@@ -570,7 +591,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       mEventDispatcher.dispatchEvent(
           new ReactTextInputEvent(
               mEditText.getId(),
-              SystemClock.nanoTime(),
               newText,
               oldText,
               start,
@@ -595,18 +615,15 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
             if (hasFocus) {
               eventDispatcher.dispatchEvent(
                   new ReactTextInputFocusEvent(
-                      editText.getId(),
-                      SystemClock.nanoTime()));
+                      editText.getId()));
             } else {
               eventDispatcher.dispatchEvent(
                   new ReactTextInputBlurEvent(
-                      editText.getId(),
-                      SystemClock.nanoTime()));
+                      editText.getId()));
 
               eventDispatcher.dispatchEvent(
                   new ReactTextInputEndEditingEvent(
                       editText.getId(),
-                      SystemClock.nanoTime(),
                       editText.getText().toString()));
             }
           }
@@ -624,7 +641,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
               eventDispatcher.dispatchEvent(
                   new ReactTextInputSubmitEditingEvent(
                       editText.getId(),
-                      SystemClock.nanoTime(),
                       editText.getText().toString()));
             }
             if (actionId == EditorInfo.IME_ACTION_NEXT ||
@@ -637,6 +653,44 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
             return !editText.getBlurOnSubmit();
           }
         });
+  }
+
+  private class ReactContentSizeWatcher implements ContentSizeWatcher {
+    private ReactEditText mEditText;
+    private EventDispatcher mEventDispatcher;
+    private int mPreviousContentWidth = 0;
+    private int mPreviousContentHeight = 0;
+
+    public ReactContentSizeWatcher(ReactEditText editText) {
+      mEditText = editText;
+      ReactContext reactContext = (ReactContext) editText.getContext();
+      mEventDispatcher = reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
+    }
+
+    @Override
+    public void onLayout() {
+      int contentWidth = mEditText.getWidth();
+      int contentHeight = mEditText.getHeight();
+
+      // Use instead size of text content within EditText when available
+      if (mEditText.getLayout() != null) {
+        contentWidth = mEditText.getCompoundPaddingLeft() + mEditText.getLayout().getWidth() +
+          mEditText.getCompoundPaddingRight();
+        contentHeight = mEditText.getCompoundPaddingTop() + mEditText.getLayout().getHeight() +
+          mEditText.getCompoundPaddingTop();
+      }
+
+      if (contentWidth != mPreviousContentWidth || contentHeight != mPreviousContentHeight) {
+        mPreviousContentHeight = contentHeight;
+        mPreviousContentWidth = contentWidth;
+
+        mEventDispatcher.dispatchEvent(
+          new ReactContentSizeChangedEvent(
+            mEditText.getId(),
+            (int) PixelUtil.toDIPFromPixel(contentWidth),
+            (int) PixelUtil.toDIPFromPixel(contentHeight)));
+      }
+    }
   }
 
   private class ReactSelectionWatcher implements SelectionWatcher {
@@ -661,7 +715,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
         mEventDispatcher.dispatchEvent(
             new ReactTextInputSelectionEvent(
                 mReactEditText.getId(),
-                SystemClock.nanoTime(),
                 start,
                 end
             )

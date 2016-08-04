@@ -14,7 +14,7 @@
 const Keyboard = require('Keyboard');
 const LayoutAnimation = require('LayoutAnimation');
 const Platform = require('Platform');
-const PropTypes = require('ReactPropTypes');
+const PropTypes = require('react/lib/ReactPropTypes');
 const React = require('React');
 const TimerMixin = require('react-timer-mixin');
 const View = require('View');
@@ -53,7 +53,12 @@ const KeyboardAvoidingView = React.createClass({
   propTypes: {
     ...View.propTypes,
     behavior: PropTypes.oneOf(['height', 'position', 'padding']),
-
+    
+    /**
+     * The style of the content container(View) when behavior is 'position'.
+     */
+    contentContainerStyle: View.propTypes.style,
+    
     /**
      * This is the distance between the top of the user screen and the react native view,
      * may be non-zero in some use cases.
@@ -160,9 +165,11 @@ const KeyboardAvoidingView = React.createClass({
 
       case 'position':
         const positionStyle = {bottom: this.state.bottom};
+        const { contentContainerStyle } = this.props;
+
         return (
           <View ref={viewRef} style={style} onLayout={this.onLayout} {...props}>
-            <View style={positionStyle}>
+            <View style={[contentContainerStyle, positionStyle]}>
               {children}
             </View>
           </View>

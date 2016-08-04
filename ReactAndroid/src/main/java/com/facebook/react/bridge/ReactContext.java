@@ -162,6 +162,14 @@ public class ReactContext extends ContextWrapper {
     }
   }
 
+  public void onNewIntent(@Nullable Activity activity, Intent intent) {
+    UiThreadUtil.assertOnUiThread();
+    mCurrentActivity = new WeakReference(activity);
+    for (ActivityEventListener listener : mActivityEventListeners) {
+      listener.onNewIntent(intent);
+    }
+  }
+
   /**
    * Should be called by the hosting Fragment in {@link Fragment#onPause}
    */
@@ -275,7 +283,7 @@ public class ReactContext extends ContextWrapper {
    * DO NOT HOLD LONG-LIVED REFERENCES TO THE OBJECT RETURNED BY THIS METHOD, AS THIS WILL CAUSE
    * MEMORY LEAKS.
    */
-  /* package */ @Nullable Activity getCurrentActivity() {
+  public @Nullable Activity getCurrentActivity() {
     if (mCurrentActivity == null) {
       return null;
     }

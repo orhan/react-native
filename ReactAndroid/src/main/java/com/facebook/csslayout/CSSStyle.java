@@ -1,13 +1,11 @@
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  * All rights reserved.
+ *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
-// NOTE: this file is auto-copied from https://github.com/facebook/css-layout
-// @generated SignedSource<<d231dc5fd873a05ae8641a7199502a2a>>
 
 package com.facebook.csslayout;
 
@@ -32,8 +30,8 @@ public class CSSStyle {
   public Spacing margin = new Spacing();
   public Spacing padding = new Spacing();
   public Spacing border = new Spacing();
+  public Spacing position = new Spacing();
 
-  public float[] position = new float[4];
   public float[] dimensions = new float[2];
 
   public float minWidth = CSSConstants.UNDEFINED;
@@ -58,11 +56,18 @@ public class CSSStyle {
     overflow = CSSOverflow.VISIBLE;
     flex = 0f;
 
-    margin.reset();;
+    margin.reset();
     padding.reset();
     border.reset();
+    position.reset();
 
-    Arrays.fill(position, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.LEFT, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.RIGHT, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.TOP, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.BOTTOM, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.START, CSSConstants.UNDEFINED);
+    position.setDefault(Spacing.END, CSSConstants.UNDEFINED);
+
     Arrays.fill(dimensions, CSSConstants.UNDEFINED);
 
     minWidth = CSSConstants.UNDEFINED;

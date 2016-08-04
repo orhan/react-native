@@ -49,7 +49,7 @@ type Config = {
 };
 
 class MessageQueue {
-  constructor(configProvider: () => Config) {
+  constructor(configProvider: () => Config, serializeNativeParams: boolean) {
     this._callableModules = {};
     this._queue = [[], [], [], 0];
     this._callbacks = [];
@@ -57,6 +57,7 @@ class MessageQueue {
     this._callID = 0;
     this._lastFlush = 0;
     this._eventLoopStartTime = new Date().getTime();
+    this._serializeNativeParams = serializeNativeParams;
 
     if (__DEV__) {
       this._debugInfo = {};
@@ -67,6 +68,7 @@ class MessageQueue {
     [
       'invokeCallbackAndReturnFlushedQueue',
       'callFunctionReturnFlushedQueue',
+      'callFunction',
       'flushedQueue',
     ].forEach((fn) => (this[fn] = this[fn].bind(this)));
 
@@ -95,6 +97,16 @@ class MessageQueue {
     });
 
     return this.flushedQueue();
+  }
+
+  callFunction(module, method, args) {
+    let result;
+    guard(() => {
+      result = this.__callFunction(module, method, args);
+      this.__callImmediates();
+    });
+
+    return result;
   }
 
   invokeCallbackAndReturnFlushedQueue(cbID, args) {
@@ -150,6 +162,7 @@ class MessageQueue {
       onSucc && params.push(this._callbackID);
       this._callbacks[this._callbackID++] = onSucc;
     }
+    var preparedParams = this._serializeNativeParams ? JSON.stringify(params) : params;
 
     if (__DEV__) {
       global.nativeTraceBeginAsyncFlow &&
@@ -159,7 +172,7 @@ class MessageQueue {
 
     this._queue[MODULE_IDS].push(module);
     this._queue[METHOD_IDS].push(method);
-    this._queue[PARAMS].push(params);
+    this._queue[PARAMS].push(preparedParams);
 
     const now = new Date().getTime();
     if (global.nativeFlushQueueImmediate &&
@@ -188,8 +201,14 @@ class MessageQueue {
       'Module %s is not a registered callable module.',
       module
     );
-    moduleMethods[method].apply(moduleMethods, args);
+    invariant(
+      !!moduleMethods[method],
+      'Method %s does not exist on module %s',
+      method, module
+    );
+    const result = moduleMethods[method].apply(moduleMethods, args);
     Systrace.endEvent();
+    return result;
   }
 
   __invokeCallback(cbID, args) {
@@ -202,10 +221,10 @@ class MessageQueue {
       const module = debug && this._remoteModuleTable[debug[0]];
       const method = debug && this._remoteMethodTable[debug[0]][debug[1]];
       if (!callback) {
-        const errorMessage = `Callback with id ${cbID}: ${module}.${method}() not found`;
+        let errorMessage = `Callback with id ${cbID}: ${module}.${method}() not found`;
         if (method) {
           errorMessage = `The callback ${method}() exists in module ${module}, `
-          + `but only one callback may be registered to a function in a native module.`;
+          + 'but only one callback may be registered to a function in a native module.';
         }
         invariant(
           callback,
