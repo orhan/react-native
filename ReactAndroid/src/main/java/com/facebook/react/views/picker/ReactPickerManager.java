@@ -18,7 +18,6 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.EventDispatcher;
-import com.facebook.react.views.picker.events.PickerFocusEvent;
 import com.facebook.react.views.picker.events.PickerItemSelectEvent;
 
 import android.content.Context;
