@@ -275,7 +275,7 @@ public class ReactContext extends ContextWrapper {
    * DO NOT HOLD LONG-LIVED REFERENCES TO THE OBJECT RETURNED BY THIS METHOD, AS THIS WILL CAUSE
    * MEMORY LEAKS.
    */
-  /* package */ @Nullable Activity getCurrentActivity() {
+  /* package */ @Nullable public Activity getCurrentActivity() {
     if (mCurrentActivity == null) {
       return null;
     }
