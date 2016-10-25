@@ -12,6 +12,7 @@ package com.facebook.react.views.viewpager;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
+import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
@@ -26,9 +27,10 @@ import javax.annotation.Nullable;
 /**
  * Instance of {@link ViewManager} that provides native {@link ViewPager} view.
  */
+@ReactModule(name = ReactViewPagerManager.REACT_CLASS)
 public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
 
-  private static final String REACT_CLASS = "AndroidViewPager";
+  protected static final String REACT_CLASS = "AndroidViewPager";
 
   public static final int COMMAND_SET_PAGE = 1;
   public static final int COMMAND_SET_PAGE_WITHOUT_ANIMATION = 2;
@@ -43,6 +45,11 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
     return new ReactViewPager(reactContext);
   }
 
+  @ReactProp(name = "scrollEnabled", defaultBoolean = true)
+  public void setScrollEnabled(ReactViewPager viewPager, boolean value) {
+    viewPager.setScrollEnabled(value);
+  }
+
   @Override
   public boolean needsCustomLayoutForChildren() {
     return true;
@@ -53,8 +60,7 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
     return MapBuilder.of(
         PageScrollEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScroll"),
         PageScrollStateChangedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageScrollStateChanged"),
-        PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected")
-    );
+        PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected"));
   }
 
   @Override
@@ -108,11 +114,6 @@ public class ReactViewPagerManager extends ViewGroupManager<ReactViewPager> {
   @Override
   public void removeViewAt(ReactViewPager parent, int index) {
     parent.removeViewFromAdapter(index);
-  }
-
-  @ReactProp(name = "scrollEnabled", defaultBoolean = true)
-  public void setScrollEnabled(ReactViewPager parent, boolean value) {
-    parent.setScrollEnabled(value);
   }
 
   @ReactProp(name = "pageMargin", defaultFloat = 0)
