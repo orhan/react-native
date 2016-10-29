@@ -195,7 +195,7 @@ int32_t CSSNodeGetInstanceCount(void) {
 
 void CSSNodeInit(const CSSNodeRef node) {
   node->parent = NULL;
-  node->children = CSSNodeListNew(4);
+  node->children = NULL;
   node->hasNewLayout = true;
   node->isDirty = false;
 
@@ -257,7 +257,7 @@ static void _CSSNodeMarkDirty(const CSSNodeRef node) {
 
 void CSSNodeInsertChild(const CSSNodeRef node, const CSSNodeRef child, const uint32_t index) {
   CSS_ASSERT(child->parent == NULL, "Child already has a parent, it must be removed first.");
-  CSSNodeListInsert(node->children, child, index);
+  CSSNodeListInsert(&node->children, child, index);
   child->parent = node;
   _CSSNodeMarkDirty(node);
 }
@@ -456,7 +456,7 @@ static void _CSSNodePrint(const CSSNodeRef node,
   gLogger("{");
 
   if (node->print) {
-    node->print(node->context);
+    node->print(node);
   }
 
   if (options & CSSPrintOptionsLayout) {
@@ -1263,7 +1263,7 @@ static void layoutNodeImpl(const CSSNodeRef node,
     } else {
       // Measure the text under the current constraints.
       const CSSSize measuredSize =
-          node->measure(node->context, innerWidth, widthMeasureMode, innerHeight, heightMeasureMode);
+          node->measure(node, innerWidth, widthMeasureMode, innerHeight, heightMeasureMode);
 
       node->layout.measuredDimensions[CSSDimensionWidth] =
           boundAxis(node,
@@ -2284,7 +2284,7 @@ bool layoutNodeInternal(const CSSNodeRef node,
     if (gPrintChanges && gPrintSkips) {
       printf("%s%d.{[skipped] ", getSpacer(gDepth), gDepth);
       if (node->print) {
-        node->print(node->context);
+        node->print(node);
       }
       printf("wm: %s, hm: %s, aw: %f ah: %f => d: (%f, %f) %s\n",
              getModeName(widthMeasureMode, performLayout),
@@ -2299,7 +2299,7 @@ bool layoutNodeInternal(const CSSNodeRef node,
     if (gPrintChanges) {
       printf("%s%d.{%s", getSpacer(gDepth), gDepth, needToVisitNode ? "*" : "");
       if (node->print) {
-        node->print(node->context);
+        node->print(node);
       }
       printf("wm: %s, hm: %s, aw: %f ah: %f %s\n",
              getModeName(widthMeasureMode, performLayout),
@@ -2320,7 +2320,7 @@ bool layoutNodeInternal(const CSSNodeRef node,
     if (gPrintChanges) {
       printf("%s%d.}%s", getSpacer(gDepth), gDepth, needToVisitNode ? "*" : "");
       if (node->print) {
-        node->print(node->context);
+        node->print(node);
       }
       printf("wm: %s, hm: %s, d: (%f, %f) %s\n",
              getModeName(widthMeasureMode, performLayout),
