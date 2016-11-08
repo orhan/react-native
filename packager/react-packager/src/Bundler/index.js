@@ -18,8 +18,6 @@ const Transformer = require('../JSTransformer');
 const Resolver = require('../Resolver');
 const Bundle = require('./Bundle');
 const HMRBundle = require('./HMRBundle');
-const PrepackBundle = require('./PrepackBundle');
-const Activity = require('../Activity');
 const ModuleTransport = require('../lib/ModuleTransport');
 const declareOpts = require('../lib/declareOpts');
 const imageSize = require('image-size');
@@ -28,6 +26,13 @@ const version = require('../../../../package.json').version;
 const sizeOf = Promise.denodeify(imageSize);
 
 const noop = () => {};
+
+const {
+  createActionStartEntry,
+  createActionEndEntry,
+  log,
+  print,
+} = require('../Logger');
 
 const validateOpts = declareOpts({
   projectRoots: {
@@ -129,9 +134,10 @@ class Bundler {
       }
     }
 
+    const transformCacheKey = cacheKeyParts.join('$');
     this._cache = new Cache({
       resetCache: opts.resetCache,
-      cacheKey: cacheKeyParts.join('$'),
+      cacheKey: transformCacheKey,
     });
 
     this._transformer = new Transformer({
@@ -152,7 +158,8 @@ class Bundler {
       resetCache: opts.resetCache,
       transformCode:
         (module, code, options) =>
-          this._transformer.transformFile(module.path, code, options),
+          this._transformer.transformFile(module.path, code, options, transformCacheKey),
+      transformCacheKey,
     });
 
     this._projectRoots = opts.projectRoots;
@@ -307,46 +314,6 @@ class Bundler {
     });
   }
 
-  prepackBundle({
-    entryFile,
-    runModule: runMainModule,
-    runBeforeMainModule,
-    sourceMapUrl,
-    dev,
-    platform,
-    assetPlugins,
-  }) {
-    const onModuleTransformed = ({module, transformed, response, bundle}) => {
-      const deps = Object.create(null);
-      const pairs = response.getResolvedDependencyPairs(module);
-      if (pairs) {
-        pairs.forEach(pair => {
-          deps[pair[0]] = pair[1].path;
-        });
-      }
-
-      return module.getName().then(name => {
-        bundle.addModule(name, transformed, deps, module.isPolyfill());
-      });
-    };
-    const finalizeBundle = ({bundle, response}) => {
-      const {mainModuleId} = response;
-      bundle.finalize({runBeforeMainModule, runMainModule, mainModuleId});
-      return bundle;
-    };
-
-    return this._buildBundle({
-      entryFile,
-      dev,
-      platform,
-      onModuleTransformed,
-      finalizeBundle,
-      minify: false,
-      bundle: new PrepackBundle(sourceMapUrl),
-      assetPlugins,
-    });
-  }
-
   _buildBundle({
     entryFile,
     dev,
@@ -364,16 +331,13 @@ class Bundler {
     finalizeBundle = noop,
     onProgress = noop,
   }) {
-    const findEventId = Activity.startEvent(
-      'Transforming modules',
-      {
+    const transformingFilesLogEntry =
+      print(log(createActionStartEntry({
+        action_name: 'Transforming files',
         entry_point: entryFile,
         environment: dev ? 'dev' : 'prod',
-      },
-      {
-        telemetric: true,
-      },
-    );
+      })));
+
     const modulesByName = Object.create(null);
 
     if (!resolutionResponse) {
@@ -392,7 +356,7 @@ class Bundler {
     return Promise.resolve(resolutionResponse).then(response => {
       bundle.setRamGroups(response.transformOptions.transform.ramGroups);
 
-      Activity.endEvent(findEventId);
+      print(log(createActionEndEntry(transformingFilesLogEntry)));
       onResolutionResponse(response);
 
       // get entry file complete path (`entryFile` is relative to roots)
