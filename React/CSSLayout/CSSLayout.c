@@ -89,7 +89,6 @@ typedef struct CSSNode {
   CSSLayout layout;
   uint32_t lineIndex;
   bool hasNewLayout;
-  bool isTextNode;
   CSSNodeRef parent;
   CSSNodeListRef children;
   bool isDirty;
@@ -382,7 +381,6 @@ void CSSNodeStyleSetFlex(const CSSNodeRef node, const float flex) {
 
 CSS_NODE_PROPERTY_IMPL(void *, Context, context, context);
 CSS_NODE_PROPERTY_IMPL(CSSPrintFunc, PrintFunc, printFunc, print);
-CSS_NODE_PROPERTY_IMPL(bool, IsTextnode, isTextNode, isTextNode);
 CSS_NODE_PROPERTY_IMPL(bool, HasNewLayout, hasNewLayout, hasNewLayout);
 
 CSS_NODE_STYLE_PROPERTY_IMPL(CSSDirection, Direction, direction, direction);
@@ -964,6 +962,16 @@ static void computeChildFlexBasis(const CSSNodeRef node,
         heightMode == CSSMeasureModeExactly && getAlignItem(node, child) == CSSAlignStretch) {
       childHeight = height;
       childHeightMeasureMode = CSSMeasureModeExactly;
+    }
+
+    if (!CSSValueIsUndefined(child->style.maxDimensions[CSSDimensionWidth])) {
+      childWidth = child->style.maxDimensions[CSSDimensionWidth];
+      childWidthMeasureMode = CSSMeasureModeAtMost;
+    }
+
+    if (!CSSValueIsUndefined(child->style.maxDimensions[CSSDimensionHeight])) {
+      childHeight = child->style.maxDimensions[CSSDimensionHeight];
+      childHeightMeasureMode = CSSMeasureModeAtMost;
     }
 
     // Measure the child
@@ -1672,6 +1680,16 @@ static void layoutNodeImpl(const CSSNodeRef node,
           }
         }
 
+        if (!CSSValueIsUndefined(currentRelativeChild->style.maxDimensions[CSSDimensionWidth])) {
+          childWidth = currentRelativeChild->style.maxDimensions[CSSDimensionWidth];
+          childWidthMeasureMode = CSSMeasureModeAtMost;
+        }
+
+        if (!CSSValueIsUndefined(currentRelativeChild->style.maxDimensions[CSSDimensionHeight])) {
+          childHeight = currentRelativeChild->style.maxDimensions[CSSDimensionHeight];
+          childHeightMeasureMode = CSSMeasureModeAtMost;
+        }
+
         const bool requiresStretchLayout =
             !isStyleDimDefined(currentRelativeChild, crossAxis) &&
             getAlignItem(node, currentRelativeChild) == CSSAlignStretch;
@@ -1859,6 +1877,16 @@ static void layoutNodeImpl(const CSSNodeRef node,
               childWidth = crossDim;
               childHeight = child->layout.measuredDimensions[CSSDimensionHeight] +
                             getMarginAxis(child, CSSFlexDirectionColumn);
+            }
+
+            if (!CSSValueIsUndefined(child->style.maxDimensions[CSSDimensionWidth])) {
+              childWidth = child->style.maxDimensions[CSSDimensionWidth];
+              childWidthMeasureMode = CSSMeasureModeAtMost;
+            }
+
+            if (!CSSValueIsUndefined(child->style.maxDimensions[CSSDimensionHeight])) {
+              childHeight = child->style.maxDimensions[CSSDimensionHeight];
+              childHeightMeasureMode = CSSMeasureModeAtMost;
             }
 
             // If the child defines a definite size for its cross axis, there's
@@ -2104,8 +2132,7 @@ static inline bool newMeasureSizeIsStricterAndStillValid(CSSMeasureMode sizeMode
          lastSize > size && lastComputedSize <= size;
 }
 
-bool CSSNodeCanUseCachedMeasurement(const bool isTextNode,
-                                           const CSSMeasureMode widthMode,
+bool CSSNodeCanUseCachedMeasurement(const CSSMeasureMode widthMode,
                                            const float width,
                                            const CSSMeasureMode heightMode,
                                            const float height,
@@ -2134,7 +2161,7 @@ bool CSSNodeCanUseCachedMeasurement(const bool isTextNode,
       newMeasureSizeIsStricterAndStillValid(
           widthMode, width - marginRow, lastWidthMode, lastWidth, lastComputedWidth);
 
-  const bool heightIsCompatible = isTextNode || hasSameHeightSpec ||
+  const bool heightIsCompatible = hasSameHeightSpec ||
                                   newSizeIsExactAndMatchesOldMeasuredSize(heightMode,
                                                                           height - marginColumn,
                                                                           lastComputedHeight) ||
@@ -2203,8 +2230,7 @@ bool layoutNodeInternal(const CSSNodeRef node,
     const float marginAxisColumn = getMarginAxis(node, CSSFlexDirectionColumn);
 
     // First, try to use the layout cache.
-    if (CSSNodeCanUseCachedMeasurement(node->isTextNode,
-                                       widthMeasureMode,
+    if (CSSNodeCanUseCachedMeasurement(widthMeasureMode,
                                        availableWidth,
                                        heightMeasureMode,
                                        availableHeight,
@@ -2220,8 +2246,7 @@ bool layoutNodeInternal(const CSSNodeRef node,
     } else {
       // Try to use the measurement cache.
       for (uint32_t i = 0; i < layout->nextCachedMeasurementsIndex; i++) {
-        if (CSSNodeCanUseCachedMeasurement(node->isTextNode,
-                                           widthMeasureMode,
+        if (CSSNodeCanUseCachedMeasurement(widthMeasureMode,
                                            availableWidth,
                                            heightMeasureMode,
                                            availableHeight,
