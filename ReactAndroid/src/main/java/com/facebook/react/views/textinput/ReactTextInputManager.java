@@ -9,26 +9,6 @@
 
 package com.facebook.react.views.textinput;
 
-import android.content.res.AssetManager;
-import javax.annotation.Nullable;
-
-import java.util.LinkedList;
-import java.util.Map;
-
-import android.graphics.PorterDuff;
-import android.graphics.Typeface;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.InputType;
-import android.text.Spannable;
-import android.text.TextWatcher;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.TextView;
-
 import com.facebook.csslayout.CSSConstants;
 import com.facebook.csslayout.Spacing;
 import com.facebook.infer.annotation.Assertions;
@@ -50,9 +30,29 @@ import com.facebook.react.uimanager.annotations.ReactPropGroup;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
 import com.facebook.react.views.text.DefaultStyleValuesUtil;
+import com.facebook.react.views.text.ReactFontManager;
 import com.facebook.react.views.text.ReactTextUpdate;
-import com.facebook.react.views.text.ReactTextView;
 import com.facebook.react.views.text.TextInlineImageSpan;
+
+import android.content.res.AssetManager;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.TextWatcher;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
+
+import java.util.LinkedList;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Manages instances of TextInput.
