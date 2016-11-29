@@ -16,12 +16,9 @@ const Module = require('./Module');
 const Package = require('./Package');
 const Polyfill = require('./Polyfill');
 
-const path = require('path');
-
 import type Cache from './Cache';
+import type DependencyGraphHelpers from './DependencyGraph/DependencyGraphHelpers';
 import type {
-  DepGraphHelpers,
-  Extractor,
   TransformCode,
   Options as ModuleOptions,
 } from './Module';
@@ -33,10 +30,9 @@ class ModuleCache {
   _packageCache: {[filePath: string]: Package};
   _fastfs: FastFs;
   _cache: Cache;
-  _extractRequires: Extractor;
   _transformCode: TransformCode;
   _transformCacheKey: string;
-  _depGraphHelpers: DepGraphHelpers;
+  _depGraphHelpers: DependencyGraphHelpers;
   _platforms: mixed;
   _assetDependencies: mixed;
   _moduleOptions: ModuleOptions;
@@ -54,10 +50,9 @@ class ModuleCache {
   }: {
     fastfs: FastFs,
     cache: Cache,
-    extractRequires: Extractor,
     transformCode: TransformCode,
     transformCacheKey: string,
-    depGraphHelpers: DepGraphHelpers,
+    depGraphHelpers: DependencyGraphHelpers,
     assetDependencies: mixed,
     moduleOptions: ModuleOptions,
   }, platforms: mixed) {
@@ -65,7 +60,6 @@ class ModuleCache {
     this._packageCache = Object.create(null);
     this._fastfs = fastfs;
     this._cache = cache;
-    this._extractRequires = extractRequires;
     this._transformCode = transformCode;
     this._transformCacheKey = transformCacheKey;
     this._depGraphHelpers = depGraphHelpers;
@@ -73,8 +67,6 @@ class ModuleCache {
     this._assetDependencies = assetDependencies;
     this._moduleOptions = moduleOptions;
     this._packageModuleMap = new WeakMap();
-
-    fastfs.on('change', this._processFileChange.bind(this));
   }
 
   getModule(filePath: string) {
@@ -84,7 +76,6 @@ class ModuleCache {
         fastfs: this._fastfs,
         moduleCache: this,
         cache: this._cache,
-        extractor: this._extractRequires,
         transformCode: this._transformCode,
         transformCacheKey: this._transformCacheKey,
         depGraphHelpers: this._depGraphHelpers,
@@ -154,16 +145,14 @@ class ModuleCache {
     });
   }
 
-  _processFileChange(type, filePath, root) {
-    const absPath = path.join(root, filePath);
-
-    if (this._moduleCache[absPath]) {
-      this._moduleCache[absPath].invalidate();
-      delete this._moduleCache[absPath];
+  processFileChange(type: string, filePath: string) {
+    if (this._moduleCache[filePath]) {
+      this._moduleCache[filePath].invalidate();
+      delete this._moduleCache[filePath];
     }
-    if (this._packageCache[absPath]) {
-      this._packageCache[absPath].invalidate();
-      delete this._packageCache[absPath];
+    if (this._packageCache[filePath]) {
+      this._packageCache[filePath].invalidate();
+      delete this._packageCache[filePath];
     }
   }
 }

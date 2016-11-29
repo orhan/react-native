@@ -302,7 +302,10 @@ class TimingAnimation extends Animation {
     this.__onEnd = onEnd;
 
     var start = () => {
-      if (this._duration === 0) {
+      // Animations that sometimes have 0 duration and sometimes do not
+      // still need to use the native driver when duration is 0 so as to
+      // not cause intermixed JS and native animations.
+      if (this._duration === 0 && !this._useNativeDriver) {
         this._onUpdate(this._toValue);
         this.__debouncedOnEnd({finished: true});
       } else {
@@ -1075,6 +1078,9 @@ class AnimatedInterpolation extends AnimatedWithChildren {
       typeof parentValue === 'number',
       'Cannot interpolate an input which is not a number.'
     );
+    /* $FlowFixMe(>=0.36.0 site=react_native_fb) Flow error detected during the
+     * deploy of Flow v0.36.0. To see the error, remove this comment and run
+     * Flow */
     return this._interpolation(parentValue);
   }
 
@@ -1747,12 +1753,6 @@ function createAnimatedComponent(Component: any): any {
       var callback = () => {
         if (this._component.setNativeProps) {
           if (!this._propsAnimated.__isNative) {
-            if (this._component.viewConfig == null) {
-              var ctor = this._component.constructor;
-              var componentName = ctor.displayName || ctor.name || '<Unknown Component>';
-              throw new Error(componentName + ' "viewConfig" is not defined.');
-            }
-
             this._component.setNativeProps(
               this._propsAnimated.__getAnimatedValue()
             );

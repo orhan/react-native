@@ -36,6 +36,12 @@ import AssetServer from '../AssetServer';
 import Module from '../node-haste/Module';
 import ResolutionResponse from '../node-haste/DependencyGraph/ResolutionResponse';
 
+export type GetTransformOptions<T> = (
+  string,
+  Object,
+  string => Promise<Array<string>>,
+) => T | Promise<T>;
+
 const sizeOf = denodeify(imageSize);
 
 const noop = () => {};
@@ -79,21 +85,13 @@ const validateOpts = declareOpts({
     type: 'object',
     required: false,
   },
-  nonPersistent: {
-    type: 'boolean',
-    default: false,
-  },
-  assetRoots: {
-    type: 'array',
-    required: false,
-  },
   assetExts: {
     type: 'array',
     default: ['png'],
   },
-  fileWatcher: {
-    type: 'object',
-    required: true,
+  watch: {
+    type: 'boolean',
+    default: false,
   },
   assetServer: {
     type: 'object',
@@ -123,11 +121,10 @@ type Options = {
   cacheVersion: string,
   resetCache: boolean,
   transformModulePath: string,
+  getTransformOptions?: GetTransformOptions<*>,
   extraNodeModules: {},
-  nonPersistent: boolean,
-  assetRoots: Array<string>,
   assetExts: Array<string>,
-  fileWatcher: {},
+  watch: boolean,
   assetServer: AssetServer,
   transformTimeoutInterval: ?number,
   allowBundleUpdates: boolean,
@@ -142,7 +139,7 @@ class Bundler {
   _resolver: Resolver;
   _projectRoots: Array<string>;
   _assetServer: AssetServer;
-  _transformOptionsModule: (path: string, options: {}, bunler: Bundler) => {};
+  _getTransformOptions: void | GetTransformOptions<*>;
 
   constructor(options: Options) {
     const opts = this._opts = validateOpts(options);
@@ -187,11 +184,10 @@ class Bundler {
 
     this._resolver = new Resolver({
       assetExts: opts.assetExts,
-      assetRoots: opts.assetRoots,
       blacklistRE: opts.blacklistRE,
       cache: this._cache,
       extraNodeModules: opts.extraNodeModules,
-      fileWatcher: opts.fileWatcher,
+      watch: opts.watch,
       minifyCode: this._transformer.minify,
       moduleFormat: opts.moduleFormat,
       polyfillModuleNames: opts.polyfillModuleNames,
@@ -202,7 +198,6 @@ class Bundler {
           module.path,
           code,
           transformCodeOptions,
-          transformCacheKey,
         ),
       transformCacheKey,
     });
@@ -210,17 +205,15 @@ class Bundler {
     this._projectRoots = opts.projectRoots;
     this._assetServer = opts.assetServer;
 
-    if (opts.getTransformOptionsModulePath) {
-      /* $FlowFixMe: dynamic requires prevent static typing :'(  */
-      this._transformOptionsModule = require(
-        opts.getTransformOptionsModulePath
-      );
-    }
+    this._getTransformOptions = opts.getTransformOptions;
   }
 
-  kill() {
+  end() {
     this._transformer.kill();
-    return this._cache.end();
+    return Promise.all([
+      this._cache.end(),
+      this.getResolver().getDependencyGraph().getWatcher().end(),
+    ]);
   }
 
   bundle(options: {
@@ -283,7 +276,7 @@ class Bundler {
     );
   }
 
-  hmrBundle(options: {platform: mixed}, host: string, port: number) {
+  hmrBundle(options: {platform: ?string}, host: string, port: number) {
     return this._bundle({
       ...options,
       bundle: new HMRBundle({
@@ -328,15 +321,15 @@ class Bundler {
         response.dependencies = moduleSystemDeps.concat(response.dependencies);
       }
     };
-    const finalizeBundle = ({bundle, transformedModules, response, modulesByName}: {
+    const finalizeBundle = ({bundle: finalBundle, transformedModules, response, modulesByName}: {
       bundle: Bundle,
-      transformedModules: Array<{module: Module, transformed: {}}>,
+      transformedModules: Array<{module: Module, transformed: ModuleTransport}>,
       response: ResolutionResponse,
       modulesByName: {[name: string]: Module},
     }) =>
       Promise.all(
         transformedModules.map(({module, transformed}) =>
-          bundle.addModule(this._resolver, response, module, transformed)
+          finalBundle.addModule(this._resolver, response, module, transformed)
         )
       ).then(() => {
         const runBeforeMainModuleIds = Array.isArray(runBeforeMainModule)
@@ -348,12 +341,12 @@ class Bundler {
               .map(response.getModuleId)
           : undefined;
 
-        bundle.finalize({
+        finalBundle.finalize({
           runMainModule,
           runBeforeMainModule: runBeforeMainModuleIds,
           allowUpdates: this._opts.allowBundleUpdates,
         });
-        return bundle;
+        return finalBundle;
       });
 
     return this._buildBundle({
@@ -475,7 +468,7 @@ class Bundler {
     generateSourceMaps = false,
   }: {
     entryFile: string,
-    platform: mixed,
+    platform: ?string,
     dev?: boolean,
     minify?: boolean,
     hot?: boolean,
@@ -522,7 +515,7 @@ class Bundler {
     onProgress,
   }: {
     entryFile: string,
-    platform: mixed,
+    platform: ?string,
     dev?: boolean,
     minify?: boolean,
     hot?: boolean,
@@ -561,7 +554,7 @@ class Bundler {
   getOrderedDependencyPaths({ entryFile, dev, platform }: {
     entryFile: string,
     dev: boolean,
-    platform: mixed,
+    platform: ?string,
   }) {
     return this.getDependencies({entryFile, dev, platform}).then(
       ({ dependencies }) => {
@@ -606,10 +599,7 @@ class Bundler {
     let moduleTransport;
     const moduleId = getModuleId(module);
 
-    if (module.isAsset_DEPRECATED()) {
-      moduleTransport =
-        this._generateAssetModule_DEPRECATED(bundle, module, moduleId);
-    } else if (module.isAsset()) {
+    if (module.isAsset()) {
       moduleTransport = this._generateAssetModule(
         bundle, module, moduleId, assetPlugins, transformOptions.platform);
     }
@@ -642,39 +632,7 @@ class Bundler {
     });
   }
 
-  _generateAssetModule_DEPRECATED(bundle, module, moduleId) {
-    return Promise.all([
-      sizeOf(module.path),
-      module.getName(),
-    ]).then(([dimensions, id]) => {
-      const img = {
-        __packager_asset: true,
-        path: module.path,
-        uri: id.replace(/^[^!]+!/, ''),
-        width: dimensions.width / module.resolution,
-        height: dimensions.height / module.resolution,
-        deprecated: true,
-      };
-
-      bundle.addAsset(img);
-
-      const code =
-        'module.exports=' +
-        JSON.stringify(filterObject(img, assetPropertyBlacklist))
-        + ';';
-
-      return new ModuleTransport({
-        name: id,
-        id: moduleId,
-        code: code,
-        sourceCode: code,
-        sourcePath: module.path,
-        virtual: true,
-      });
-    });
-  }
-
-  _generateAssetObjAndCode(module, assetPlugins, platform: mixed = null) {
+  _generateAssetObjAndCode(module, assetPlugins, platform: ?string = null) {
     const relPath = getPathRelativeToRoot(this._projectRoots, module.path);
     var assetUrlPath = joinPath('/assets', pathDirname(relPath));
 
@@ -751,7 +709,7 @@ class Bundler {
     module,
     moduleId,
     assetPlugins: Array<string> = [],
-    platform: mixed = null,
+    platform: ?string = null,
   ) {
     return Promise.all([
       module.getName(),
@@ -770,9 +728,20 @@ class Bundler {
     });
   }
 
-  getTransformOptions(mainModuleName: string, options: {}) {
-    const extraOptions = this._transformOptionsModule
-      ? this._transformOptionsModule(mainModuleName, options, this)
+  getTransformOptions(
+    mainModuleName: string,
+    options: {
+      dev?: boolean,
+      platform: ?string,
+      hot?: boolean,
+      generateSourceMaps?: boolean,
+    },
+  ) {
+    const getDependencies = (entryFile: string) =>
+      this.getDependencies({...options, entryFile})
+        .then(r => r.dependencies.map(d => d.path));
+    const extraOptions = this._getTransformOptions
+      ? this._getTransformOptions(mainModuleName, options, getDependencies)
       : null;
     return Promise.resolve(extraOptions)
       .then(extraOpts => Object.assign(options, extraOpts));
