@@ -10,7 +10,6 @@
 package com.facebook.react.views.textinput;
 
 import com.facebook.csslayout.CSSConstants;
-import com.facebook.csslayout.Spacing;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
@@ -21,6 +20,7 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.BaseViewManager;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.PixelUtil;
+import com.facebook.react.uimanager.Spacing;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewDefaults;

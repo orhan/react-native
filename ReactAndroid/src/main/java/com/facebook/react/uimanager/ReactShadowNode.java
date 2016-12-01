@@ -14,17 +14,16 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 import com.facebook.csslayout.CSSAlign;
+import com.facebook.csslayout.CSSEdge;
 import com.facebook.csslayout.CSSConstants;
 import com.facebook.csslayout.CSSDirection;
 import com.facebook.csslayout.CSSFlexDirection;
 import com.facebook.csslayout.CSSJustify;
-import com.facebook.csslayout.CSSLayoutContext;
 import com.facebook.csslayout.CSSNode;
 import com.facebook.csslayout.CSSNodeAPI;
 import com.facebook.csslayout.CSSOverflow;
 import com.facebook.csslayout.CSSPositionType;
 import com.facebook.csslayout.CSSWrap;
-import com.facebook.csslayout.Spacing;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.uimanager.annotations.ReactPropertyHolder;
 
@@ -287,23 +286,10 @@ public class ReactShadowNode {
     }
 
     if (hasNewLayout()) {
-      float newLeft = Math.round(absoluteX + getLayoutX());
-      float newTop = Math.round(absoluteY + getLayoutY());
-      float newRight = Math.round(absoluteX + getLayoutX() + getLayoutWidth());
-      float newBottom = Math.round(absoluteY + getLayoutY() + getLayoutHeight());
-
-      if (newLeft == mAbsoluteLeft &&
-          newRight == mAbsoluteRight &&
-          newTop == mAbsoluteTop &&
-          newBottom == mAbsoluteBottom) {
-        return false;
-      }
-
-      mAbsoluteLeft = newLeft;
-      mAbsoluteTop = newTop;
-      mAbsoluteRight = newRight;
-      mAbsoluteBottom = newBottom;
-
+      mAbsoluteLeft = Math.round(absoluteX + getLayoutX());
+      mAbsoluteTop = Math.round(absoluteY + getLayoutY());
+      mAbsoluteRight = Math.round(absoluteX + getLayoutX() + getLayoutWidth());
+      mAbsoluteBottom = Math.round(absoluteY + getLayoutY() + getLayoutHeight());
       nativeViewHierarchyOptimizer.handleUpdateLayout(this);
       return true;
     } else {
@@ -352,8 +338,8 @@ public class ReactShadowNode {
     return mShouldNotifyOnLayout;
   }
 
-  public void calculateLayout(CSSLayoutContext layoutContext) {
-    mCSSNode.calculateLayout(layoutContext);
+  public void calculateLayout() {
+    mCSSNode.calculateLayout();
   }
 
   public final boolean hasNewLayout() {
@@ -605,11 +591,11 @@ public class ReactShadowNode {
   }
 
   public void setMargin(int spacingType, float margin) {
-    mCSSNode.setMargin(spacingType, margin);
+    mCSSNode.setMargin(CSSEdge.fromInt(spacingType), margin);
   }
 
   public final float getPadding(int spacingType) {
-    return mCSSNode.getPadding(spacingType);
+    return mCSSNode.getPadding(CSSEdge.fromInt(spacingType));
   }
 
   public void setDefaultPadding(int spacingType, float padding) {
@@ -625,40 +611,40 @@ public class ReactShadowNode {
   private void updatePadding() {
     for (int spacingType = Spacing.LEFT; spacingType <= Spacing.ALL; spacingType++) {
       if (spacingType == Spacing.LEFT ||
-        spacingType == Spacing.RIGHT ||
-        spacingType == Spacing.START ||
-        spacingType == Spacing.END) {
+          spacingType == Spacing.RIGHT ||
+          spacingType == Spacing.START ||
+          spacingType == Spacing.END) {
         if (CSSConstants.isUndefined(mPadding.getRaw(spacingType)) &&
           CSSConstants.isUndefined(mPadding.getRaw(Spacing.HORIZONTAL)) &&
           CSSConstants.isUndefined(mPadding.getRaw(Spacing.ALL))) {
-          mCSSNode.setPadding(spacingType, mDefaultPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mDefaultPadding.getRaw(spacingType));
         } else {
-          mCSSNode.setPadding(spacingType, mPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mPadding.getRaw(spacingType));
         }
       } else if (spacingType == Spacing.TOP || spacingType == Spacing.BOTTOM) {
         if (CSSConstants.isUndefined(mPadding.getRaw(spacingType)) &&
           CSSConstants.isUndefined(mPadding.getRaw(Spacing.VERTICAL)) &&
           CSSConstants.isUndefined(mPadding.getRaw(Spacing.ALL))) {
-          mCSSNode.setPadding(spacingType, mDefaultPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mDefaultPadding.getRaw(spacingType));
         } else {
-          mCSSNode.setPadding(spacingType, mPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mPadding.getRaw(spacingType));
         }
       } else {
         if (CSSConstants.isUndefined(mPadding.getRaw(spacingType))) {
-          mCSSNode.setPadding(spacingType, mDefaultPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mDefaultPadding.getRaw(spacingType));
         } else {
-          mCSSNode.setPadding(spacingType, mPadding.getRaw(spacingType));
+          mCSSNode.setPadding(CSSEdge.fromInt(spacingType), mPadding.getRaw(spacingType));
         }
       }
     }
   }
 
   public void setBorder(int spacingType, float borderWidth) {
-    mCSSNode.setBorder(spacingType, borderWidth);
+    mCSSNode.setBorder(CSSEdge.fromInt(spacingType), borderWidth);
   }
 
   public void setPosition(int spacingType, float position) {
-    mCSSNode.setPosition(spacingType, position);
+    mCSSNode.setPosition(CSSEdge.fromInt(spacingType), position);
   }
 
   public void setPositionType(CSSPositionType positionType) {
