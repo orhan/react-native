@@ -9,7 +9,26 @@
 
 package com.facebook.react.views.textinput;
 
-import com.facebook.csslayout.CSSConstants;
+import javax.annotation.Nullable;
+
+import java.util.LinkedList;
+import java.util.Map;
+
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.TextWatcher;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
+
+import com.facebook.yoga.YogaConstants;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
@@ -501,9 +520,9 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       ViewProps.BORDER_TOP_RIGHT_RADIUS,
       ViewProps.BORDER_BOTTOM_RIGHT_RADIUS,
       ViewProps.BORDER_BOTTOM_LEFT_RADIUS
-  }, defaultFloat = CSSConstants.UNDEFINED)
+  }, defaultFloat = YogaConstants.UNDEFINED)
   public void setBorderRadius(ReactEditText view, int index, float borderRadius) {
-    if (!CSSConstants.isUndefined(borderRadius)) {
+    if (!YogaConstants.isUndefined(borderRadius)) {
       borderRadius = PixelUtil.toPixelFromDIP(borderRadius);
     }
 
@@ -525,9 +544,9 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       ViewProps.BORDER_RIGHT_WIDTH,
       ViewProps.BORDER_TOP_WIDTH,
       ViewProps.BORDER_BOTTOM_WIDTH,
-  }, defaultFloat = CSSConstants.UNDEFINED)
+  }, defaultFloat = YogaConstants.UNDEFINED)
   public void setBorderWidth(ReactEditText view, int index, float width) {
-    if (!CSSConstants.isUndefined(width)) {
+    if (!YogaConstants.isUndefined(width)) {
       width = PixelUtil.toPixelFromDIP(width);
     }
     view.setBorderWidth(SPACING_TYPES[index], width);
@@ -537,8 +556,8 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
       "borderColor", "borderLeftColor", "borderRightColor", "borderTopColor", "borderBottomColor"
   }, customType = "Color")
   public void setBorderColor(ReactEditText view, int index, Integer color) {
-    float rgbComponent = color == null ? CSSConstants.UNDEFINED : (float) ((int)color & 0x00FFFFFF);
-    float alphaComponent = color == null ? CSSConstants.UNDEFINED : (float) ((int)color >>> 24);
+    float rgbComponent = color == null ? YogaConstants.UNDEFINED : (float) ((int)color & 0x00FFFFFF);
+    float alphaComponent = color == null ? YogaConstants.UNDEFINED : (float) ((int)color >>> 24);
     view.setBorderColor(SPACING_TYPES[index], rgbComponent, alphaComponent);
   }
 
