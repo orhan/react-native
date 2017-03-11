@@ -4,6 +4,7 @@ title: Building React Native from source
 layout: docs
 category: Guides (Android)
 permalink: docs/android-building-from-source.html
+banner: ejected
 next: activityindicator
 previous: android-ui-performance
 ---
@@ -144,7 +145,7 @@ gradle.projectsLoaded {
 
 ## Testing
 
-If you made changes to React Native and submit a pull request, all tests will run on your pull request automatically. To run the tests locally, see [Testing](/react-native/docs/testing.html).
+If you made changes to React Native and submit a pull request, all tests will run on your pull request automatically. To run the tests locally, see [Testing](docs/testing.html).
 
 ## Troubleshooting
 
